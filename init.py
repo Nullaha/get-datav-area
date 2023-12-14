@@ -12,6 +12,7 @@ def create_dir(name):
         os.makedirs(name)
 
 def modify_adcode_to_id(json_data):
+    print(json_data)
     for feature in json_data['features']:
         if 'properties' in feature and 'adcode' in feature['properties']:
             feature['properties']['id'] = feature['properties'].pop('adcode')
@@ -29,8 +30,8 @@ def read_data_from_dir(dir,wantLevel):
 
     for filename in os.listdir(dir):
         print(filename)
-        if filename !='130000.json':
-           continue 
+        # if filename !='130000.json':
+        #    continue 
 
         if not filename.endswith('.json'):
             continue
@@ -49,10 +50,10 @@ def read_data_from_dir(dir,wantLevel):
               print(f"KeyError for ${feature['properties']} encountered in {filename}. Skipping this feature.")
               write_to_errfile(f"KeyError:{feature}-{filename}")
               continue
-          if wantLevel != level:
-              print(f"我需要的level:{wantLevel}，数据中的level:{level}")
-              write_to_errfile(f"errorLevel:wantLevel:{wantLevel}-level:{level}")
-              continue
+          # if wantLevel != level:
+          #     print(f"我需要的level:{wantLevel}，数据中的level:{level}")
+          #     write_to_errfile(f"errorLevel:wantLevel:{wantLevel}-level:{level}")
+          #     continue
           if ( str(adcode) == '710000' 
               or str(adcode) == '810000' 
               or str(adcode) =='820000'
@@ -64,8 +65,8 @@ def read_data_from_dir(dir,wantLevel):
               print(f"{adcode} file already exists. Skipping.")
               continue
           
-
-          child_url = f"https://geo.datav.aliyun.com/areas_v3/bound/{adcode}_full.json"
+          child_url = f"https://geo.datav.aliyun.com/areas_v3/bound/{adcode}{'_full' if level !='district' else ''}.json"
+          print('child_url:',child_url)
           try:
               child_response = requests.get(child_url)
               child_data = json.loads(child_response.text)
@@ -82,25 +83,28 @@ def read_data_from_dir(dir,wantLevel):
     return
     
 
+def get_china_data_to_dir():
+  if os.path.exists('china'):
+      return
+
+  url = set_url(100000)
+  print(url)
+  response = requests.get(url)
+  data = json.loads(response.text)
+  data = modify_adcode_to_id(data)
+  china_filename = f"china/100000.json"
+  create_dir("china")
+  to_write_file(china_filename,data)
+  
+  return
 
 
 
 
 
-
-
-
-# url = set_url(100000)
-# response = requests.get(url)
-# data = json.loads(response.text)
-# data = modify_adcode_to_id(data)
-# china_filename = f"china/100000.json"
-# create_dir("china")
-# to_write_file(china_filename,data)
-    
 
 create_dir("error")
-read_data_from_dir('province','city')
-
-
+get_china_data_to_dir()
+# read_data_from_dir('china','province')
+# read_data_from_dir('province',1)
 
